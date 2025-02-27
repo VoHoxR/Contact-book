@@ -1,59 +1,55 @@
 import tkinter as tk
-from tkinter import simpledialog, messagebox
+from tkinter import messagebox, simpledialog
+import os
 
-class ContactBookApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Contact Book")
-        self.contacts = []
+def create_new_contact_book():
+    # Get the number of existing contact books
+    existing_files = [f for f in os.listdir() if f.startswith("contactbook") and f.endswith(".csv")]
+    new_file_number = len(existing_files) + 1
+    new_file_name = f"contactbook{new_file_number}.csv"
+    
+    # Create the new CSV file
+    with open(new_file_name, 'w') as file:
+        file.write("Name,Phone\n")  # Add headers to the CSV file
+    
+    messagebox.showinfo("Success", f"Created new contact book: {new_file_name}")
+    add_new_contact(new_file_name)
 
-        self.menu_frame = tk.Frame(root)
-        self.menu_frame.pack(pady=20)
+def add_new_contact(file_name):
+    name = simpledialog.askstring("Input", "Enter contact name:")
+    phone = simpledialog.askstring("Input", "Enter contact phone number:")
+    
+    if name and phone:
+        with open(file_name, 'a') as file:
+            file.write(f"{name},{phone}\n")
+        messagebox.showinfo("Success", "Contact added successfully!")
+    else:
+        messagebox.showwarning("Warning", "Name and phone number cannot be empty.")
 
-        self.create_button = tk.Button(self.menu_frame, text="Create a new contact book", command=self.create_contact_book)
-        self.create_button.pack(fill='x')
+def view_edit_contact_books():
+    existing_files = [f for f in os.listdir() if f.startswith("contactbook") and f.endswith(".csv")]
+    if not existing_files:
+        messagebox.showinfo("Info", "No contact books available.")
+        return
+    
+    selected_file = simpledialog.askstring("Input", f"Enter the contact book number (1-{len(existing_files)}):")
+    if selected_file and selected_file.isdigit() and 1 <= int(selected_file) <= len(existing_files):
+        file_name = f"contactbook{selected_file}.csv"
+        os.system(f"notepad.exe {file_name}")
+    else:
+        messagebox.showwarning("Warning", "Invalid contact book number.")
 
-        self.view_button = tk.Button(self.menu_frame, text="View current contact book", command=self.view_contact_book)
-        self.view_button.pack(fill='x')
-
-        self.edit_button = tk.Button(self.menu_frame, text="Edit current contact book", command=self.edit_contact_book)
-        self.edit_button.pack(fill='x')
-
-        self.exit_button = tk.Button(self.menu_frame, text="Exit", command=root.quit)
-        self.exit_button.pack(fill='x')
-
-    def create_contact_book(self):
-        self.contacts = []
-        while True:
-            name = simpledialog.askstring("Input", "Enter contact name (or 'done' to finish):")
-            if name is None or name.lower() == 'done':
-                break
-            phone = simpledialog.askstring("Input", "Enter contact phone number:")
-            if phone is not None:
-                self.contacts.append({'name': name, 'phone': phone})
-
-    def view_contact_book(self):
-        if not self.contacts:
-            messagebox.showinfo("Info", "No contacts found.")
-        else:
-            contacts_str = "\n".join([f"Name: {contact['name']}, Phone: {contact['phone']}" for contact in self.contacts])
-            messagebox.showinfo("Contact Book", contacts_str)
-
-    def edit_contact_book(self):
-        if not self.contacts:
-            messagebox.showinfo("Info", "No contacts to edit.")
-            return
-        name_to_edit = simpledialog.askstring("Input", "Enter the name of the contact to edit:")
-        for contact in self.contacts:
-            if contact['name'] == name_to_edit:
-                new_phone = simpledialog.askstring("Input", f"Enter new phone number for {name_to_edit}:")
-                if new_phone is not None:
-                    contact['phone'] = new_phone
-                    messagebox.showinfo("Info", "Contact updated.")
-                    return
-        messagebox.showinfo("Info", "Contact not found.")
+def main():
+    root = tk.Tk()
+    root.title("Contact Book Creator")
+    
+    create_button = tk.Button(root, text="Create New Contact Book", command=create_new_contact_book)
+    create_button.pack(pady=20)
+    
+    view_edit_button = tk.Button(root, text="View/Edit Contact Books", command=view_edit_contact_books)
+    view_edit_button.pack(pady=20)
+    
+    root.mainloop()
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = ContactBookApp(root)
-    root.mainloop()
+    main()
